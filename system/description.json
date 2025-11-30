@@ -1,0 +1,171 @@
+{
+  "project": {
+    "name": "Fairness-Aware Academic Search Engine",
+    "description": "A search engine for academic papers that highlights author-declared diversity attributes and re-ranks results with fairness-aware scoring while maintaining transparency.",
+    "goals": [
+      "Enable users to search academic papers with both keyword and semantic search.",
+      "Extract and highlight 'contribution' sentences from papers.",
+      "Tag authors based on authoritative, self-declared sources (e.g., ORCID, curated lists).",
+      "Provide a fairness-aware re-ranking that transparently boosts underrepresented authors.",
+      "Offer provenance, transparency, and ethical safeguards against misrepresentation."
+    ],
+    "architecture": {
+      "frontend": {
+        "framework": "React + TypeScript",
+        "features": [
+          "Responsive SPA (single-page application)",
+          "Search bar with advanced filters",
+          "Results list with relevance scores",
+          "Contribution snippet highlights",
+          "Author badges (with provenance tooltip)",
+          "Paper detail view (abstract, metadata, citations, contribution summary)",
+          "Feedback/report button",
+          "Toggle for boosted vs unboosted ranking view"
+        ],
+        "styling": "Tailwind CSS"
+      },
+      "backend": {
+        "framework": "Python FastAPI",
+        "alternatives": ["Express.js", "GraphQL endpoint"],
+        "features": [
+          "Endpoints: /search, /paper/:id, /feedback",
+          "Optional auth (for contributors, saving searches)",
+          "Re-ranking logic with fairness-aware boost"
+        ]
+      },
+      "data_indexing": {
+        "document_ingestion": [
+          "ArXiv API",
+          "Crossref API",
+          "Semantic Scholar API",
+          "PubMed API"
+        ],
+        "storage": "PostgreSQL for metadata",
+        "pdf_handling": "Store metadata + PDF links (only when allowed)",
+        "text_extraction_pipeline": [
+          "Extract abstracts, intros, conclusions",
+          "Contribution extraction using NLP/LLM or rule-based keyword matching"
+        ],
+        "search_index": {
+          "full_text": "Elasticsearch or OpenSearch",
+          "vector_search": ["FAISS", "Pinecone", "Weaviate"]
+        }
+      },
+      "author_identity_layer": {
+        "principles": [
+          "Only use self-declared or authoritative info (ORCID, personal sites, university bios).",
+          "Supplement with curated lists from trusted sources.",
+          "No automated inference from names/photos."
+        ],
+        "sources": [
+          "ORCID profiles",
+          "Conference diversity lists",
+          "Award recipient lists",
+          "Community contributions (moderated)"
+        ]
+      },
+      "re_ranking": {
+        "algorithm": {
+          "base_score": "search_engine_score(paper, query)",
+          "citation_boost": "log(1 + citations) * alpha (e.g., 0.1)",
+          "tag_boost": "beta (e.g., 0.25) if any author is in curated/self-declared list",
+          "final_score": "base_score * (1 + citation_boost) + tag_boost"
+        },
+        "transparency": [
+          "Show badge + tooltip for boosted results",
+          "Provide toggle to view unboosted ranking"
+        ]
+      },
+      "logging_feedback": {
+        "track": [
+          "Clicks",
+          "Relevance feedback",
+          "False positives/negatives",
+          "Corrections to author tags"
+        ],
+        "moderation": "Manual review of feedback and tag corrections"
+      }
+    },
+    "ethics_legal": {
+      "rules": [
+        "No inference of race/gender from names or photos.",
+        "Every author tag must link to a source (provenance).",
+        "Provide opt-out/correction for authors.",
+        "Do not store sensitive data without consent.",
+        "Respect API ToS (Crossref, ArXiv, Semantic Scholar)."
+      ],
+      "bias_metrics": [
+        "Track fraction of curated underrepresented authors in top-k results.",
+        "Measure precision@k and nDCG with and without re-ranking."
+      ]
+    },
+    "core_features": {
+      "mvp": [
+        "Keyword-based search over ArXiv + Crossref.",
+        "Ranking by relevance + citation count fallback.",
+        "Rule-based contribution sentence extraction.",
+        "Basic author tagging from ORCID + curated CSV.",
+        "Re-ranking with fairness boost.",
+        "Responsive UI with badges and provenance tooltips.",
+        "README with ethical design rationale."
+      ],
+      "advanced": [
+        "Semantic search using embeddings + vector DB.",
+        "Automated contribution summarization (LLM-assisted, with source links).",
+        "Opt-in author profile claims/edits.",
+        "Community moderation for tags.",
+        "Analytics dashboard for fairness metrics.",
+        "Exportable bibliographies and shareable search links."
+      ]
+    },
+    "tech_stack": {
+      "frontend": "React + TypeScript + Tailwind CSS",
+      "backend": "FastAPI (Python)",
+      "search": "Elasticsearch/OpenSearch",
+      "vector_db": ["FAISS (local)", "Pinecone/Weaviate (managed)"],
+      "db": "PostgreSQL",
+      "nlp": [
+        "spaCy for parsing",
+        "SentenceTransformers for embeddings",
+        "Hugging Face Transformers for LLM tasks"
+      ],
+      "deployment": [
+        "Frontend: Vercel",
+        "Backend: Railway / Render / AWS",
+        "Containerization: Docker"
+      ],
+      "ci_cd": "GitHub Actions (optional)"
+    },
+    "action_plan": {
+      "phase_1": "Repo scaffold (GitHub, LICENSE, README, issue board)",
+      "phase_2": "Fetch demo dataset (200–500 papers from ArXiv, 2–3 topics)",
+      "phase_3": "Basic search API + React frontend (titles + abstracts)",
+      "phase_4": "Contribution extraction (keyword-based rules)",
+      "phase_5": "Author tagging (manual CSV + ORCID lookups)",
+      "phase_6": "Re-ranking implementation (boosting with provenance)",
+      "phase_7": "UI polish + tooltips + badges",
+      "phase_8": "Write-up: README ethics, demo video, screenshots",
+      "phase_9_optional": "Add embeddings, semantic search, and summarization"
+    },
+    "resume_highlights": [
+      "Built fairness-aware academic search engine with transparent boosting.",
+      "Implemented ingestion pipeline from scholarly APIs.",
+      "Designed rule-based and AI-enhanced contribution extraction.",
+      "Developed re-ranking algorithm with provenance and transparency.",
+      "Deployed full-stack app (React + FastAPI + Elasticsearch)."
+    ],
+    "evaluation": {
+      "ir_metrics": ["precision@k", "nDCG"],
+      "fairness_metrics": ["underrepresented authors in top-k before/after boost"],
+      "human_eval": "Volunteers rate relevance and accuracy of contributions",
+      "a_b_testing": "Compare boosted vs unboosted user satisfaction"
+    },
+    "risks_tradeoffs": {
+      "mislabeling": "Mitigation: only authoritative/curated sources + dispute flow",
+      "perceived_unfairness": "Mitigation: transparency + toggle for boosting",
+      "relevance_vs_fairness": "Keep boost small and test with users"
+    }
+  }
+}
+
+

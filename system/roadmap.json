@@ -1,0 +1,104 @@
+{
+"project_name": "Fairness-Aware Academic Search Engine",
+"tech_stack": {
+"frontend": ["React", "TypeScript", "Tailwind CSS"],
+"backend": ["FastAPI", "Uvicorn"],
+"database": "PostgreSQL",
+"search": ["Elasticsearch"],
+"vector_db": ["FAISS", "Pinecone"],
+"nlp": ["spaCy", "SentenceTransformers", "Transformers"],
+"utils": ["requests", "python-dotenv", "pandas"]
+},
+"requirements_txt": "fastapi\nuvicorn\npsycopg2-binary\nsqlalchemy\npydantic\nelasticsearch\nspacy\nsentence-transformers\ntransformers\nrequests\npython-dotenv\npandas",
+"env_vars": ["DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT"],
+"starter_scripts": {
+"db_connection.py": "Python script to connect to PostgreSQL using psycopg2 and dotenv",
+"fetch_demo_papers.py": "Script to fetch 5-10 demo papers from ArXiv and insert into DB",
+"main_fastapi.py": "Starter FastAPI app with /search and /paper/:id endpoints"
+},
+"weekly_plan": {
+"week_1": {
+"goal": "Environment Setup & Core Dependencies",
+"tasks": [
+"Activate Python venv",
+"Install libraries using requirements.txt",
+"Test imports with a small script",
+"Set up PostgreSQL database 'academic_search'"
+]
+},
+"week_2": {
+"goal": "Data Ingestion & Storage",
+"tasks": [
+"Fetch demo papers from ArXiv/Crossref APIs",
+"Store metadata in PostgreSQL (title, abstract, authors, citations, URL)",
+"Add 'contributions' column to papers table",
+"Optionally store PDFs or links"
+]
+},
+"week_3": {
+"goal": "Basic Search API",
+"tasks": [
+"Build FastAPI endpoints: /search, /paper/:id",
+"Query PostgreSQL for keyword search (title + abstract)",
+"Integrate basic React frontend: search bar, results list with title, abstract, authors"
+]
+},
+"week_4": {
+"goal": "Contribution Extraction",
+"tasks": [
+"Implement rule-based contribution extraction (spaCy/regex keywords)",
+"Store contributions in DB",
+"Highlight contribution snippets in frontend results"
+]
+},
+"week_5": {
+"goal": "Author Tagging",
+"tasks": [
+"Use ORCID API + CSV of curated authors",
+"Add badges with provenance tooltip in frontend",
+"Implement opt-out/correction flow for authors"
+]
+},
+"week_6": {
+"goal": "Fairness-Aware Re-Ranking",
+"tasks": [
+"Implement boosting formula: final_score = base_score * (1 + alpha*log(1+citations)) + beta*(underrepresented_flag)",
+"Sort search results by final_score",
+"Frontend toggle: boosted vs unboosted ranking",
+"Log metrics and feedback for auditing"
+]
+},
+"week_7": {
+"goal": "UI Polish",
+"tasks": [
+"Tailwind styling for search results, badges, contributions",
+"Paper detail view: metadata + contributions",
+"Feedback button implementation"
+]
+},
+"week_8": {
+"goal": "Evaluation & Metrics",
+"tasks": [
+"Compute IR metrics: precision@k, nDCG",
+"Compute fairness metrics: fraction of underrepresented authors in top-k",
+"Conduct human evaluation of contributions and ranking"
+]
+},
+"week_9_plus": {
+"goal": "Optional Advanced Features",
+"tasks": [
+"Semantic search: embeddings + FAISS / Pinecone",
+"LLM-assisted contribution summarization with source links",
+"Community moderation for author tags",
+"Analytics dashboard & exportable bibliographies"
+]
+}
+},
+"immediate_next_steps": [
+"Ensure venv is activated",
+"Install all required Python libraries via requirements.txt",
+"Create .env file with DB credentials",
+"Test DB connection with db_connection.py",
+"Run fetch_demo_papers.py to insert demo papers into DB"
+]
+}
