@@ -1,95 +1,85 @@
-#Database models and connection setup using SQLAlchemy.
-#Defines the schema for papers, authors, and author tags.
+"""
+Database models and connection setup.
+TODO: You'll implement this step by step.
+"""
 
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+from typing import List, Optional
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
+from sqlalchemy import String, Integer, Text, DateTime, create_engine, Table, Column, ForeignKey
 from config import get_database_url
 
-# Create database engine
-engine = create_engine(
-    get_database_url(),
-    pool_pre_ping=True,  # Verify connections before using
-    echo=False  # Set to True for SQL query logging
+engine = create_engine(get_database_url())
+
+class Base(DeclarativeBase):
+    pass
+
+
+paper_author_link = Table(
+    "paper_author_link",
+    Base.metadata,
+    Column("paper_id", ForeignKey("papers.id"), primary_key=True),
+    Column("author_id", ForeignKey("authors.id"), primary_key=True),
 )
-
-# Session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for models
-Base = declarative_base()
 
 
 class Paper(Base):
-    """Model representing an academic paper."""
     __tablename__ = "papers"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), index=True, )
+    abstract: Mapped[Optional[str]] = mapped_column(Text)
+    citation_count: Mapped[int] = mapped_column(Integer, default=0)
+    abs_url: Mapped[Optional[str]] = mapped_column(String(255), index=True, default = "No URL available")
+    pdf_url: Mapped[Optional[str]] = mapped_column(String(255), index=True, default = "No URL available")
+    where_published: Mapped[Optional[str]] = mapped_column(String(255), index=True, default = "No Source available")
+    published_date: Mapped[Optional[DateTime]] = mapped_column(DateTime, default = None)
+    authors: Mapped[List["Author"]] = relationship(
+        secondary=paper_author_link, back_populates="papers")
+    contributions: Mapped[List["Contribution"]] = relationship(
+        "Contribution", back_populates="paper", cascade="all, delete-orphan")
     
-    id = Column(Integer, primary_key=True, index=True)
-    arxiv_id = Column(String, unique=True, index=True, nullable=True)
-    title = Column(String, index=True, nullable=False)
-    abstract = Column(Text, nullable=True)
-    published_date = Column(DateTime, nullable=True)
-    arxiv_url = Column(String, nullable=True)
-    pdf_url = Column(String, nullable=True)
-    citation_count = Column(Integer, default=0)
-    contribution_sentences = Column(Text, nullable=True)  # JSON string of extracted contributions
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    @property
+    def tags(self) -> set[str]:
+        return {tag.tag for author in self.authors for tag in author.tags}
     
-    # Relationships
-    authors = relationship("Author", back_populates="paper", cascade="all, delete-orphan")
-    tags = relationship("AuthorTag", back_populates="paper", cascade="all, delete-orphan")
-
 
 class Author(Base):
-    """Model representing a paper author."""
     __tablename__ = "authors"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), index=True)
     
-    id = Column(Integer, primary_key=True, index=True)
-    paper_id = Column(Integer, ForeignKey("papers.id"), nullable=False)
-    name = Column(String, nullable=False, index=True)
-    orcid_id = Column(String, nullable=True, index=True)
-    affiliation = Column(String, nullable=True)
-    author_order = Column(Integer, default=0)  # Order in author list
-    
-    # Relationships
-    paper = relationship("Paper", back_populates="authors")
+    papers: Mapped[List[Paper]] = relationship(secondary=paper_author_link, back_populates="authors")
+    tags: Mapped[List["AuthorTag"]] = relationship("AuthorTag", back_populates="author", cascade="all, delete-orphan")
+
+
+
+class Contribution(Base):
+    __tablename__ = "contributions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    paper_id: Mapped[int] = mapped_column(Integer, ForeignKey("papers.id"))
+    text : Mapped[str] = mapped_column(Text)
+    paper: Mapped[Paper] = relationship("Paper", back_populates="contributions")
 
 
 class AuthorTag(Base):
-    """Model for tagging authors with diversity attributes (from authoritative sources)."""
     __tablename__ = "author_tags"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("authors.id"))
     
-    id = Column(Integer, primary_key=True, index=True)
-    paper_id = Column(Integer, ForeignKey("papers.id"), nullable=False)
-    author_name = Column(String, nullable=False, index=True)
-    orcid_id = Column(String, nullable=True, index=True)
-    tag_type = Column(String, nullable=False)  # e.g., "underrepresented_minority", "woman_in_stem"
-    source = Column(String, nullable=False)  # Provenance: "ORCID", "curated_list", "self_declared"
-    source_url = Column(String, nullable=True)  # Link to source
-    verified = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    paper = relationship("Paper", back_populates="tags")
+    tag: Mapped[str] = mapped_column(String(63), index=True)
+    author: Mapped[Author] = relationship(back_populates="tags")
 
 
 def get_db():
-    """Dependency for FastAPI to get database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    '''Fast API dependency function'''
+    with Session(engine) as session:
+        yield session
 
 
 def init_db():
-    """Create all database tables. Run this once to set up the schema."""
-    Base.metadata.create_all(bind=engine)
-    print("Database tables created successfully!")
+    '''create db tables'''
+    Base.metadata.create_all(engine)
+    print("DB tables made")
 
 
 if __name__ == "__main__":
-    # Run this script to initialize the database
     init_db()
