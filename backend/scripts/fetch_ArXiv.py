@@ -6,7 +6,7 @@ import sys
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 from database import get_database_url, Author, Paper
-from arxiv_categories import arXivcats as CATS
+from .arxiv_categories import arXivcats as CATS
 
 
 def fetch_ArXiv(category, fetchcount) ->str:
@@ -83,7 +83,10 @@ def save_ArXiv(papers: list[dict], engine):
     with Session(engine) as session:
         try:
             for paper in papers:
-            #authors first cuz add to Author
+                existing_paper = session.query(Paper).filter_by(abs_url=paper.get("abs_url")).first()
+                if existing_paper:
+                    continue
+                #authors first cuz add to Author
                 author_objs = []
                 for auth_name in paper["authors"]:
                     author = session.query(Author).filter_by(name=auth_name).first()
@@ -119,9 +122,12 @@ def fetchAcategory(cat,amount):
     
 def main():
     amount = int(sys.argv[1])
-    for cat in CATS:
-        fetchAcategory(cat,amount)
-        time.sleep(2)
+    if len(sys.argv)>2:
+        fetchAcategory(sys.argv[2],amount)
+    else:
+        for cat in CATS:
+            fetchAcategory(cat,amount)
+            time.sleep(2)
     return 0
 
 
